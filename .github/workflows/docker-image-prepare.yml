@@ -35,6 +35,5 @@ jobs:
       # Step 4: Push to Amazon ECR
       - name: Push to Amazon ECR
         run: |
-          ECR_REPOSITORY=${{ secrets.ECR_URI}}/${{ env.IMAGE_NAME}}
-          docker tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} $ECR_REPOSITORY:${{ env.IMAGE_TAG }}
-          docker push $ECR_REPOSITORY:${{ env.IMAGE_TAG }}
+          docker tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ secrets.ECR_URI }}:${{ env.IMAGE_TAG }}
+          docker push ${{ secrets.ECR_URI }}:${{ env.IMAGE_TAG }}
