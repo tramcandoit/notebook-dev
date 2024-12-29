@@ -20,3 +20,6 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONARQUBE_URL }}
+        with:
+        args: >
+          -Dsonar.projectKey=notebook
