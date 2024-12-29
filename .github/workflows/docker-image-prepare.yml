@@ -1,0 +1,40 @@
+name: Docker Image Prepare
+
+on:
+  workflow_run:
+    workflows:
+      - "SonarQube Scan"
+    types:
+      - completed
+
+jobs:
+  docker-build-push:
+    runs-on: ubuntu-latest
+    
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+    # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Log in to Amazon ECR
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+
+      # Step 3: Build Docker Image
+      - name: Build Docker Image
+        run: |
+          IMAGE_NAME=notebook
+          IMAGE_TAG=$(echo "${GITHUB_SHA}" | cut -c1-8)
+          docker build -t $IMAGE_NAME:$IMAGE_TAG .
+
+      # Step 4: Push to Amazon ECR
+      - name: Push to Amazon ECR
+        run: |
+          ECR_REPOSITORY=${{ secrets.ECR_URI}}/${{ env.IMAGE_NAME}}
+          docker tag ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} $ECR_REPOSITORY:${{ env.IMAGE_TAG }}
+          docker push $ECR_REPOSITORY:${{ env.IMAGE_TAG }}

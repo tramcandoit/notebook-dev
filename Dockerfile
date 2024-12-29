@@ -20,7 +20,6 @@ WORKDIR /root/app
 # Copy the built binary from the builder stage
 COPY --from=builder /src/app/server .
 
-# Copy public files
 COPY ./public/index.html public/index.html
 COPY ./public/script.js public/script.js
 COPY ./public/style.css public/style.css
