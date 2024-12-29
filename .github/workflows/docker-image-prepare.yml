@@ -18,22 +18,46 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Log in to Amazon ECR
+      # Step 2: Configure AWS
       - name: Configure AWS CLI
         run: |
           aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws configure set default.region us-east-1
+          
+      # Step 3: Log in to Amazon ECR
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-east-1
 
-      # Step 3: Build Docker Image
+      # Step 4: Build Docker Image
       - name: Build Docker Image
         run: |
           IMAGE_NAME=notebook
           IMAGE_TAG=$(echo "${GITHUB_SHA}" | cut -c1-6)
           docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
-      # Step 4: Push to Amazon ECR
+      # Step 5: Install Trivy
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+          trivy --version
+
+      # Step 6: Scan the Docker image with Trivy
+      - name: Scan Docker Image with Trivy
+        run: |
+          IMAGE_NAME=notebook
+          IMAGE_TAG=$(echo "${GITHUB_SHA}" | cut -c1-6)
+          echo "Scanning Docker image: $IMAGE_NAME:$IMAGE_TAG"
+          ./trivy image $IMAGE_NAME:$IMAGE_TAG
+
+      # Step 7: Push to Amazon ECR
       - name: Push to Amazon ECR
         run: |
-          docker tag $IMAGE_NAME:$IMAGE_TAG ${{ secrets.ECR_URI }}/$IMAGE_NAME:$IMAGE_TAG
-          docker push ${{ secrets.ECR_URI }}/$IMAGE_NAME:$IMAGE_TAG
+          IMAGE_NAME=notebook
+          IMAGE_TAG=$(echo "${GITHUB_SHA}" | cut -c1-6)
+          docker tag $IMAGE_NAME:$IMAGE_TAG ${{ secrets.ECR_URI }}:$IMAGE_TAG
+          docker push ${{ secrets.ECR_URI }}:$IMAGE_TAG
