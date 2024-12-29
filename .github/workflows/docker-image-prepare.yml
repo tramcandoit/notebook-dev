@@ -19,19 +19,17 @@ jobs:
         uses: actions/checkout@v3
 
       # Step 2: Log in to Amazon ECR
-      - name: Log in to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v1
-        with:
-          aws-region: us-east-1
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+      - name: Configure AWS CLI
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set default.region us-east-1
 
       # Step 3: Build Docker Image
       - name: Build Docker Image
         run: |
           IMAGE_NAME=notebook
-          IMAGE_TAG=$(echo "${GITHUB_SHA}" | cut -c1-8)
+          IMAGE_TAG=$(echo "${GITHUB_SHA}" | cut -c1-6)
           docker build -t $IMAGE_NAME:$IMAGE_TAG .
 
       # Step 4: Push to Amazon ECR
