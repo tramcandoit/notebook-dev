@@ -1,0 +1,22 @@
+name: SonarQube Scan
+
+on:
+  push:
+    branches:
+      - dev # Trigger when code is pushed to the dev branch
+
+jobs:
+  sonarqube-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Run Sonarqube scan
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+          SONARQUBE_URL: ${{ secrets.SONARQUBE_URL }}
