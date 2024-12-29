@@ -1,0 +1,53 @@
+name: Update Kustomization
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  update-kustomization:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout your repository
+      - name: Checkout this repository
+        uses: actions/checkout@v3
+
+      # Step 2: Checkout the target repository
+      - name: Checkout target repository
+        uses: actions/checkout@v3
+        with:
+          repository: tramcandoit/notebook-manifests 
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }
+          path: notebook 
+
+      # Step 3: Modify kustomization.yaml
+      - name: Update kustomization.yaml
+        run: |
+          cd notebook
+          if [ -f kustomization.yaml ]; then
+            echo "Updating kustomization.yaml"
+            IMAGE_TAG=$(echo "${GITHUB_SHA}" | cut -c1-6)
+            sed -i "s|image: my-image:.*|image: my-image:${IMAGE_TAG}|" kustomization.yaml
+          else
+            echo "kustomization.yaml not found!"
+            exit 1
+          fi
+
+      # Step 4: Commit changes
+      - name: Commit changes
+        run: |
+          cd notebook
+          git config --global user.email "${{ secrets.EMAIL }}"
+          git config --global user.name "${{ secrets.USER_NAME }}"
+          git add kustomization.yaml
+          git commit -m "Update kustomization.yaml to use image tag ${GITHUB_SHA::6}" || echo "No changes to commit"
+
+      # Step 5: Push changes
+      - name: Push changes
+        run: |
+          cd notebook
+          git push origin master
+        env:
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
