@@ -1,9 +1,9 @@
-name: Update Kustomization
-
 on:
-  push:
-    branches:
-      - master
+  workflow_run:
+    workflows:
+      - "Docker Image Prepare"
+    types:
+      - completed
 
 jobs:
   update-kustomization:
