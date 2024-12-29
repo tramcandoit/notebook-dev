@@ -44,6 +44,8 @@ jobs:
       - name: Install Trivy
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+          echo "Adding Trivy to PATH"
+          export PATH=$PATH:./bin
           trivy --version
 
       # Step 6: Scan the Docker image with Trivy
@@ -52,7 +54,7 @@ jobs:
           IMAGE_NAME=notebook
           IMAGE_TAG=$(echo "${GITHUB_SHA}" | cut -c1-6)
           echo "Scanning Docker image: $IMAGE_NAME:$IMAGE_TAG"
-          ./trivy image $IMAGE_NAME:$IMAGE_TAG
+          ./bin/trivy image $IMAGE_NAME:$IMAGE_TAG
 
       # Step 7: Push to Amazon ECR
       - name: Push to Amazon ECR
